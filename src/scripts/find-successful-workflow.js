@@ -8,6 +8,7 @@ const mainBranchName = process.env.MAIN_BRANCH_NAME || process.argv[4];
 const errorOnNoSuccessfulWorkflow = process.argv[5] === '1';
 const allowOnHoldWorkflow = process.argv[6] === '1';
 const workflowName = process.argv[7];
+const ignoreMainBranchName = process.argv[8] === '1';
 const circleToken = process.env.CIRCLE_API_TOKEN;
 
 const [, host, project] = buildUrl.match(/https?:\/\/([^\/]+)\/(.*)\/\d+/);
@@ -52,12 +53,19 @@ Found the last successful workflow run on 'origin/${mainBranchName}'.\n\n`);
 })();
 
 async function findSuccessfulCommit(branch, workflowName) {
-  const url = `https://${host}/api/v2/project/${project}/pipeline?branch=${branch}`;
+  const url = `https://${host}/api/v2/project/${project}/pipeline`;
   let nextPage;
   let foundSHA;
 
   do {
-    const fullUrl = nextPage ? `${url}&page-token=${nextPage}` : url;
+    const queryParams = [];
+    if (!ignoreMainBranchName) {
+      queryParams.push(`branch=${branch}`)
+    }
+    if (nextPage) {
+      queryParams.push(`page-token=${nextPage}`)
+    }
+    const fullUrl = queryParams.length ? `${url}?${queryParams.join('&')}` : url;
     const { next_page_token, sha } = await getJson(fullUrl)
       .then(async ({ next_page_token, items }) => {
         const pipeline = await findSuccessfulPipeline(items, workflowName);

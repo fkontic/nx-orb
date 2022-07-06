@@ -25,6 +25,11 @@ parameters:
     description: |
       By default, only workflows with CircleCI status of "success" will be detected for the main branch.
       Enable this option to also detect workflows with CircleCI status of "on_hold" in case your workflow requires manual approvals.
+  ignore-main-branch-name:
+    type: boolean
+    default: false
+    description: |
+      If set to true, searches for a successful workflow on any branch or tag.
 
 steps:
   - run:
@@ -33,12 +38,13 @@ steps:
         PARAM_ERROR_ON_NO_SUCCESSFUL_WORKFLOW: <<parameters.error-on-no-successful-workflow>>
         PARAM_WORKFLOW_NAME: <<parameters.workflow-name>>
         PARAM_ALLOW_ON_HOLD: <<parameters.allow-on-hold-workflow>>
+        PARAM_IGNORE_MAIN_BRANCH_NAME: <<parameters.ignore-main-branch-name>>
         PARAM_SCRIPT: <<include(scripts/find-successful-workflow.js)>>
       name: Derives SHAs for base and head for use in `nx affected` commands
       shell: "/bin/bash"
       command: |
         echo "$PARAM_SCRIPT" >> "index.js"
-        RESPONSE=$(node index.js $CIRCLE_BUILD_URL $CIRCLE_BRANCH $PARAM_MAIN_BRANCH $PARAM_ERROR_ON_NO_SUCCESSFUL_WORKFLOW $PARAM_ALLOW_ON_HOLD $PARAM_WORKFLOW_NAME)
+        RESPONSE=$(node index.js $CIRCLE_BUILD_URL $CIRCLE_BRANCH $PARAM_MAIN_BRANCH $PARAM_ERROR_ON_NO_SUCCESSFUL_WORKFLOW $PARAM_ALLOW_ON_HOLD $PARAM_WORKFLOW_NAME $PARAM_IGNORE_MAIN_BRANCH_NAME)
         echo "$RESPONSE"
         BASE_SHA=$(echo "$RESPONSE" | grep 'Commit:' | sed 's/.*Commit: //')
         HEAD_SHA=$(git rev-parse HEAD)
