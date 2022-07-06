@@ -23,6 +23,7 @@ usage:
             error-on-no-successful-workflow: true
             workflow-name: "nx-pipeline"
             allow-on-hold-workflow: true
+            dont-filter-by-branch: true
         - run:
             name: Run Builds
             command: yarn nx affected --target=build --base=$NX_BASE

@@ -3,18 +3,18 @@ const { execSync } = require('child_process');
 const https = require('https');
 
 const buildUrl = process.argv[2];
-const branchName = process.argv[3];
-const mainBranchName = process.env.MAIN_BRANCH_NAME || process.argv[4];
-const errorOnNoSuccessfulWorkflow = process.argv[5] === '1';
-const allowOnHoldWorkflow = process.argv[6] === '1';
-const workflowName = process.argv[7];
+const mainBranchName = process.env.MAIN_BRANCH_NAME || process.argv[3];
+const errorOnNoSuccessfulWorkflow = process.argv[4] === '1';
+const allowOnHoldWorkflow = process.argv[5] === '1';
+const workflowName = process.argv[6];
+const dontFilterByBranch = process.argv[7] === '1';
 const circleToken = process.env.CIRCLE_API_TOKEN;
 
 const [, host, project] = buildUrl.match(/https?:\/\/([^\/]+)\/(.*)\/\d+/);
 
 let BASE_SHA;
 (async () => {
-  if (branchName !== mainBranchName) {
+  if (!isCommitOnMainBranch('HEAD', mainBranchName)) {
     BASE_SHA = execSync(`git merge-base origin/${mainBranchName} HEAD`, { encoding: 'utf-8' });
   } else {
     try {
@@ -52,12 +52,19 @@ Found the last successful workflow run on 'origin/${mainBranchName}'.\n\n`);
 })();
 
 async function findSuccessfulCommit(branch, workflowName) {
-  const url = `https://${host}/api/v2/project/${project}/pipeline?branch=${branch}`;
+  const url = `https://${host}/api/v2/project/${project}/pipeline`;
   let nextPage;
   let foundSHA;
 
   do {
-    const fullUrl = nextPage ? `${url}&page-token=${nextPage}` : url;
+    const queryParams = [];
+    if (!dontFilterByBranch) {
+      queryParams.push(`branch=${branch}`)
+    }
+    if (nextPage) {
+      queryParams.push(`page-token=${nextPage}`)
+    }
+    const fullUrl = queryParams.length ? `${url}?${queryParams.join('&')}` : url;
     const { next_page_token, sha } = await getJson(fullUrl)
       .then(async ({ next_page_token, items }) => {
         const pipeline = await findSuccessfulPipeline(items, workflowName);
@@ -131,4 +138,13 @@ async function getJson(url) {
         : new Error(`Error: Pipeline fetching failed.\nIf this is private repo you will need to set CIRCLE_API_TOKEN\n\n${error.toString()}`)
     ));
   });
+}
+
+function isCommitOnMainBranch(commit, mainBranchName) {
+  try {
+    execSync(`git merge-base --is-ancestor ${commit} origin/${mainBranchName}`, { encoding: 'utf-8' })
+    return true;
+  } catch (e) {
+    return false;
+  }
 }
