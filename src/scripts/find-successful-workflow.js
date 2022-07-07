@@ -16,10 +16,13 @@ const [, host, project] = buildUrl.match(/https?:\/\/([^\/]+)\/(.*)\/\d+/);
 let BASE_SHA;
 (async () => {
   if (branchName !== mainBranchName) {
+    process.stdout.write('first if true');
     BASE_SHA = execSync(`git merge-base origin/${mainBranchName} HEAD`, { encoding: 'utf-8' });
   } else {
+    process.stdout.write('first if false');
     try {
       BASE_SHA = await findSuccessfulCommit(mainBranchName, workflowName);
+      process.stdout.write(`BASE_SHA ${BASE_SHA}`);
     } catch (e) {
       process.stderr.write(e.message);
       process.exit(1);
