@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  nx: nrwl/nx@<<pipeline.parameters.dev-orb-version>>
+  nx: fkontic/nx@<<pipeline.parameters.dev-orb-version>>
   orb-tools: circleci/orb-tools@10.0
 
 # Pipeline Parameters
@@ -28,6 +28,8 @@ workflows:
   test-pack:
     unless: << pipeline.parameters.run-integration-tests >>
     jobs:
+      - run:
+        circleci orb create namespace/name
       - orb-tools/lint
       - orb-tools/pack:
           use-orb-pack: true
