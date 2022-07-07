@@ -3,12 +3,11 @@ const { execSync } = require('child_process');
 const https = require('https');
 
 const buildUrl = process.argv[2];
-const branchName = process.argv[3];
-const mainBranchName = process.env.MAIN_BRANCH_NAME || process.argv[4];
-const errorOnNoSuccessfulWorkflow = process.argv[5] === '1';
-const allowOnHoldWorkflow = process.argv[6] === '1';
-const workflowName = process.argv[7];
-const ignoreMainBranchName = process.argv[8] === '1';
+const mainBranchName = process.env.MAIN_BRANCH_NAME || process.argv[3];
+const errorOnNoSuccessfulWorkflow = process.argv[4] === '1';
+const allowOnHoldWorkflow = process.argv[5] === '1';
+const workflowName = process.argv[6];
+const ignoreMainBranchName = process.argv[7] === '1';
 const circleToken = process.env.CIRCLE_API_TOKEN;
 
 const [, host, project] = buildUrl.match(/https?:\/\/([^\/]+)\/(.*)\/\d+/);
