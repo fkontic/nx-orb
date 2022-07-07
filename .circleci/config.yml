@@ -28,8 +28,6 @@ workflows:
   test-pack:
     unless: << pipeline.parameters.run-integration-tests >>
     jobs:
-      - run:
-        circleci orb create namespace/name
       - orb-tools/lint
       - orb-tools/pack:
           use-orb-pack: true
