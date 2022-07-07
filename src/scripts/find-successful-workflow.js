@@ -15,7 +15,7 @@ const [, host, project] = buildUrl.match(/https?:\/\/([^\/]+)\/(.*)\/\d+/);
 
 let BASE_SHA;
 (async () => {
-  if (branchName !== mainBranchName) {
+  if (!isCommintOnMainBranch('HEAD', mainBranchName)) {
     process.stdout.write('first if true');
     BASE_SHA = execSync(`git merge-base origin/${mainBranchName} HEAD`, { encoding: 'utf-8' });
   } else {
@@ -142,4 +142,13 @@ async function getJson(url) {
         : new Error(`Error: Pipeline fetching failed.\nIf this is private repo you will need to set CIRCLE_API_TOKEN\n\n${error.toString()}`)
     ));
   });
+}
+
+function isCommintOnMainBranch(commit, mainBranchName) {
+  try {
+    execSync(`git merge-base --is-ancestor ${commit} origin/${mainBranchName}`, { encoding: 'utf-8' })
+    return true;
+  } catch (e) {
+    return false;
+  }
 }
